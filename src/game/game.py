@@ -106,32 +106,26 @@ class Player:
         moved = False #hat der Spieler sich bewegt?
         if((direction == 'right')
                 and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"]},{self.node["col"] + 1}') in self.board.graph.edges): #String zur Identifikation der Kante prüfen
-            self.node['symbol'] = '□' #altes Feld bekommt Symbol für leeres Feld zugewiesen
-            self.node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] + 1}') #Spielerfeld wird aktualisiert
-            self.node['symbol'] = self.name #neues Feld bekommt Symbol vom Spieler
-            self.game_won() #Prüfung, ob das Spiel gewonnen wurde
+            next_node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] + 1}')
             moved = True
         elif((direction == 'left')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"]},{self.node["col"] - 1}') in self.board.graph.edges):
-            self.node['symbol'] = '□'
-            self.node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] - 1}')
-            self.node['symbol'] = self.name
-            self.game_won()
+            next_node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] - 1}')
             moved = True
         elif((direction == 'up')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"] - 1},{self.node["col"]}') in self.board.graph.edges):
-            self.node['symbol'] = '□'
-            self.node = board.graph.nodes.get(f'{self.node["row"] - 1},{self.node["col"]}')
-            self.node['symbol'] = self.name
-            self.game_won()
+            next_node = board.graph.nodes.get(f'{self.node["row"] - 1},{self.node["col"]}')
             moved = True
         elif((direction == 'down')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"] + 1},{self.node["col"]}') in self.board.graph.edges):
-            self.node['symbol'] = '□'
-            self.node = board.graph.nodes.get(f'{self.node["row"] + 1},{self.node["col"]}')
-            self.node['symbol'] = self.name
-            self.game_won()
+            next_node = board.graph.nodes.get(f'{self.node["row"] + 1},{self.node["col"]}')
             moved = True
+
+        if(moved):
+            self.node['symbol'] = '□' #altes Feld bekommt Symbol für leeres Feld zugewiesen
+            self.node = next_node #Spielerfeld wird aktualisiert
+            self.node['symbol'] = self.name #neues Feld bekommt Symbol vom Spieler
+            self.game_won() #Prüfung, ob das Spiel gewonnen wurde
         if((moved is False) or #Bewegung war ungültig
                 (moved is True and self.name == 'A' and self.node == board.player_b.node) # oder Spieler A springt über Spieler B
                 or (moved is True and self.name == 'B' and self.node == board.player_a.node)): #oder Spieler B springt über Spieler A
