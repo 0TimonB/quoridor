@@ -163,8 +163,6 @@ class Player:
             return True
         return False
 
-        #TODO Blockierende elemente dürfen den Weg für einen Spieler nicht komplett verhindern
-
     def check_if_path_exists(self):
         path_player_a_exists = False
         path_player_b_exists = False
