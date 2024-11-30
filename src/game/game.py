@@ -154,6 +154,8 @@ class Player:
             return True
         return False
 
+        #TODO Blockierende elemente dürfen sich nicht überlappen
+
 
 class Blocking_element:
     def __init__(self, board, row, col, orientation):
