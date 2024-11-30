@@ -80,6 +80,7 @@ class Player:
         self.node['symbol'] = self.name
         self.blocks = 10
         self.won = False
+
         if (row == 0):
             self.goal = 8
         if (row == 8):
@@ -155,6 +156,7 @@ class Player:
         return False
 
         #TODO Blockierende elemente dürfen sich nicht überlappen
+        #TODO Blockierende elemente dürfen den Weg für einen Spieler nicht komplett verhindern
 
 
 class Blocking_element:
