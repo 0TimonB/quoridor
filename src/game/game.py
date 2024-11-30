@@ -154,12 +154,28 @@ class Player:
             and f'{row},{col}' not in self.board.nodes_used_for_blocking):
             self.board.graph.remove_edge(edge_a[0], edge_a[1])
             self.board.graph.remove_edge(edge_b[0], edge_b[1])
+            if (not self.check_if_path_exists()):
+                self.board.add_edge(edge_a[0], edge_a[1])
+                self.board.add_edge(edge_b[0], edge_b[1])
+                return False
             self.blocks -= 1
             self.board.nodes_used_for_blocking.append(f'{row},{col}')
             return True
         return False
 
         #TODO Blockierende elemente dürfen den Weg für einen Spieler nicht komplett verhindern
+
+    def check_if_path_exists(self):
+        path_player_a_exists = False
+        path_player_b_exists = False
+        for col in range(9): #check for both players, if any path to a tile of the goal row exists
+            if nx.has_path(self.board.graph,f'{board.player_a.node["row"]},{board.player_a.node["col"]}',f'{board.player_a.goal},{col}'):
+                path_player_a_exists = True
+            if nx.has_path(self.board.graph,f'{board.player_b.node["row"]},{board.player_b.node["col"]}',f'{board.player_b.goal},{col}'):
+                path_player_b_exists = True
+            if path_player_a_exists and path_player_b_exists:
+                return True
+        return False
 
 
 class Blocking_element:
@@ -188,7 +204,6 @@ class Blocking_element:
                     a     b
                     |     |
                     c     d
-
 
                 :param row: row-Position von a
                 :param col: col-Position von a
@@ -226,8 +241,17 @@ if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
     board = Board(9)
     board.graph.remove_edge(f'{4},{4}', f'{5},{4}')
-    board.player_b.place_blocking_element(7,3,'horizontal')
-    board.player_b.place_blocking_element(7,3,'vertical') #sollte nicht ausgeführt werden
+    board.player_b.place_blocking_element(7,0,'horizontal')
+    board.player_b.place_blocking_element(7, 1, 'horizontal')
+    board.player_b.place_blocking_element(7, 2, 'horizontal')
+    board.player_b.place_blocking_element(7, 3, 'horizontal')
+    board.player_b.place_blocking_element(7, 4, 'horizontal')
+    board.player_b.place_blocking_element(7, 5, 'horizontal')
+    board.player_b.place_blocking_element(7, 6, 'horizontal')
+    board.player_b.place_blocking_element(7, 7, 'horizontal')
+
+    board.player_b.place_blocking_element(7, 8, 'horizontal')
+    board.player_b.place_blocking_element(7,6,'vertical') #sollte nicht ausgeführt werden
     board.player_b.move('right')
     board.player_b.move('right')
     board.player_b.move('right')
