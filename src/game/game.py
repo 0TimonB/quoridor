@@ -1,4 +1,3 @@
-
 import networkx as nx
 
 class Board:
@@ -56,15 +55,43 @@ class Board:
                 print('       ', end='')
             print()
 
-    #TODO: Simulation eines Spieles implementieren
-    # zunächst manuell steuerbar, dann per programmierter KI
-    #def simulate_game(self):
+    # Simulation eines Spieles implementieren
+    # zunächst manuell steuerbar (Konsole), dann per programmierter KI
 
+    def simulate_game(self):
+        current_player = self.player_a
+        while not self.player_a.won and not self.player_b.won:
+            self.print_board()
+            print(f"Spieler {current_player.name} ist am Zug.")
 
+            action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
+            action_parts = action.split()
 
+            #Prüfen des move Befehls
+            if action_parts[0] == 'move' and len(action_parts) == 2:
+                direction = action_parts[1]
+                if not current_player.move(direction):
+                    print("Ungültiger Zug, bitte erneut versuchen.")
 
+            # Prüfen des block Befehls
+            elif action_parts[0] == 'block' and len(action_parts) == 4:
+                row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
+                if not current_player.place_blocking_element(row, col, orientation):
+                    print("Blockade konnte nicht platziert werden, bitte erneut versuchen.")
 
+            else:
+                print(
+                    "Ungültige Aktion. Bitte verwenden Sie 'move [direction]' oder 'block [row] [col] [orientation]'.")
 
+            # Wechsel des Spielers
+            current_player = self.player_b if current_player == self.player_a else self.player_a
+
+        #Spiel beendet, Ausgabe des Gewinners
+        self.print_board()
+        if self.player_a.won:
+            print("Spieler A hat gewonnen!")
+        else:
+            print("Spieler B hat gewonnen!")
 
 class Player:
     def __init__(self, board, row, col, name):
@@ -73,7 +100,7 @@ class Player:
         :param board: Das Spielfeld, auf welchem gespielt wird
         :param row: Startposition, Zeile
         :param col: Startposition, Spalte
-        :param name: Symbol des Spielers (für die grafische Spielfeld ausgabe in der Konsole)
+        :param name: Symbol des Spielers (für die grafische Spielfeldausgabe in der Konsole)
         '''
         self.board = board
         self.name = name
@@ -89,7 +116,7 @@ class Player:
 
     def game_won(self):
         '''
-        Falls ein Spieler seine ZielReihe erreischt hat, wird die Klassenvariable self.won auf True gesetzt
+        Falls ein Spieler seine ZielReihe erreicht hat, wird die Klassenvariable self.won auf True gesetzt
         '''
         if(self.node['row'] == self.goal):
             self.won = True
@@ -137,12 +164,12 @@ class Player:
 
     def place_blocking_element(self, row, col, orientation):
         '''
-        Plazieren einer Blockade auf dem Spielfeld,
+        Platzieren einer Blockade auf dem Spielfeld,
             Näheres in der Klasse Blocking_element
         :param row: Ausgangszeile der Blockade
         :param col: Ausgangsspalte der Blockade
         :param orientation: orientierung der Blockade ('vertical' oder 'horizontal')
-        :return: Falls Blockade plaziert werden konnte:
+        :return: Falls Blockade platziert werden konnte:
                     True
                 sonst (eine oder beide der Kanten sind schon blockiert):
                     False
@@ -239,34 +266,5 @@ if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
     board = Board(9)
     board.graph.remove_edge(f'{4},{4}', f'{5},{4}')
-    board.player_b.place_blocking_element(7,0,'horizontal')
-    board.player_b.place_blocking_element(7, 1, 'horizontal')
-    board.player_b.place_blocking_element(7, 2, 'horizontal')
-    board.player_b.place_blocking_element(7, 3, 'horizontal')
-    board.player_b.place_blocking_element(7, 4, 'horizontal')
-    board.player_b.place_blocking_element(7, 5, 'horizontal')
-    board.player_b.place_blocking_element(7, 6, 'horizontal')
-    board.player_b.place_blocking_element(7, 7, 'horizontal')
-
-    board.player_b.place_blocking_element(7, 8, 'horizontal')
-    board.player_b.place_blocking_element(7,6,'vertical') #sollte nicht ausgeführt werden
-    board.player_b.move('right')
-    board.player_b.move('right')
-    board.player_b.move('right')
-    board.player_b.move('right')
-    board.player_b.move('up')
-    board.player_a.move('down')
-    board.player_a.move('down')
-    board.player_a.move('down')
-    board.player_a.move('down')
-    board.player_a.move('down')# wird nicht gemacht, da Kante fehlt
-    board.player_a.move('down')# wird nicht gemacht, da Kante fehlt
-    board.player_a.move('down')# wird nicht gemacht, da Kante fehlt
-    board.player_a.move('down')# wird nicht gemacht, da Kante fehlt
-    board.player_a.move('left')
-    board.player_a.move('down')
-    board.player_a.move('down')
-    board.player_a.move('down')
-    board.player_a.move('down')# wird nicht gemacht, da Kante fehlt
-    board.print_board()
+    board.simulate_game()
 
