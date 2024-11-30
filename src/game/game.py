@@ -31,6 +31,7 @@ class Board:
         #Spieler erzeugen
         self.player_a = Player(self,0,4,'A')
         self.player_b = Player(self,8,4,'B')
+        self.nodes_used_for_blocking = []
 
     def print_board(self):
         '''
@@ -105,6 +106,7 @@ class Player:
                     True
         '''
         moved = False #hat der Spieler sich bewegt?
+        next_node = self.node
         if((direction == 'right')
                 and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"]},{self.node["col"] + 1}') in self.board.graph.edges): #String zur Identifikation der Kante prüfen
             next_node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] + 1}')
@@ -148,14 +150,15 @@ class Player:
         blocking_element = Blocking_element(self, row, col, orientation)
         edge_a, edge_b = blocking_element.return_blocked_paths()
         if (edge_a in self.board.graph.edges
-            and edge_b in self.board.graph.edges):
+            and edge_b in self.board.graph.edges
+            and f'{row},{col}' not in self.board.nodes_used_for_blocking):
             self.board.graph.remove_edge(edge_a[0], edge_a[1])
             self.board.graph.remove_edge(edge_b[0], edge_b[1])
             self.blocks -= 1
+            self.board.nodes_used_for_blocking.append(f'{row},{col}')
             return True
         return False
 
-        #TODO Blockierende elemente dürfen sich nicht überlappen
         #TODO Blockierende elemente dürfen den Weg für einen Spieler nicht komplett verhindern
 
 
@@ -224,6 +227,7 @@ if __name__ == '__main__':
     board = Board(9)
     board.graph.remove_edge(f'{4},{4}', f'{5},{4}')
     board.player_b.place_blocking_element(7,3,'horizontal')
+    board.player_b.place_blocking_element(7,3,'vertical') #sollte nicht ausgeführt werden
     board.player_b.move('right')
     board.player_b.move('right')
     board.player_b.move('right')
