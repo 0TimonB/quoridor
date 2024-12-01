@@ -69,27 +69,39 @@ class Board:
             action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
             action_parts = action.split()
 
-            #TODO wenn spieler a auf spieler b steht (sprung), dann nicht blockieren
+            #Wenn spieler a auf spieler b steht (sprung), dann nicht blockieren
+            if current_player == self.player_a and self.player_a.node == self.player_b.node:
+                blocking_invalid = True
+            else:
+                blocking_invalid = False
 
+            move_ok = True
             #Prüfen des move Befehls
             if action_parts[0] == 'move' and len(action_parts) == 2:
                 direction = action_parts[1]
                 if not current_player.move(direction):
+                    move_ok = False
                     print("Ungültiger Zug, bitte erneut versuchen.")
 
-            # Prüfen des block Befehls
+            #Prüfen des block Befehls
             elif action_parts[0] == 'block' and len(action_parts) == 4:
+                if blocking_invalid:
+                    print("Blockieren ist nicht erlaubt, da Sie über den Gegner springen.")
+                    continue  # Gehe zurück zur Eingabeaufforderung
                 row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
                 if not current_player.place_blocking_element(row, col, orientation):
                     print("Blockade konnte nicht platziert werden, bitte erneut versuchen.")
 
             else:
+                move_ok = False
                 print(
                     "Ungültige Aktion. Bitte verwenden Sie 'move [direction]' oder 'block [row] [col] [orientation]'.")
-                #TODO Spieler ist nochmal dran
 
-            # Wechsel des Spielers
-            current_player = self.player_b if current_player == self.player_a else self.player_a
+            #Wechsel des Spielers oder nochmal, falls Spielzug ungültig
+            if move_ok:
+                current_player = self.player_b if current_player == self.player_a else self.player_a
+            else:
+                current_player = self.player_a if current_player == self.player_a else self.player_b
 
         #Spiel beendet, Ausgabe des Gewinners
         self.print_board()
