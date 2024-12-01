@@ -27,6 +27,8 @@ class Board:
                     self.graph.add_edge(f'{row},{col}', f'{row + 1},{col}')
                 if (f'{row},{col + 1}' in self.graph.nodes):
                     self.graph.add_edge(f'{row},{col}', f'{row},{col + 1}')
+        #TODO Zielknoten hinzufügen die mit zielreihen verbunden sind
+
         #Spieler erzeugen
         self.player_a = Player(self,0,4,'A')
         self.player_b = Player(self,8,4,'B')
@@ -67,6 +69,8 @@ class Board:
             action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
             action_parts = action.split()
 
+            #TODO wenn spieler a auf spieler b steht (sprung), dann nicht blockieren
+
             #Prüfen des move Befehls
             if action_parts[0] == 'move' and len(action_parts) == 2:
                 direction = action_parts[1]
@@ -82,6 +86,7 @@ class Board:
             else:
                 print(
                     "Ungültige Aktion. Bitte verwenden Sie 'move [direction]' oder 'block [row] [col] [orientation]'.")
+                #TODO Spieler ist nochmal dran
 
             # Wechsel des Spielers
             current_player = self.player_b if current_player == self.player_a else self.player_a
