@@ -196,6 +196,7 @@ class Player:
         return False
 
     def check_if_path_exists(self):
+        #TODO Auf zusatzknoten prüfen, statt ganze zielreihe, wenn zusatzknoten da
         path_player_a_exists = False
         path_player_b_exists = False
         for col in range(9): #check for both players, if any path to a tile of the goal row exists
