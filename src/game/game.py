@@ -19,6 +19,9 @@ class Board:
         for row in range(self.size):
             for col in range(self.size):
                 self.graph.add_node(f'{row},{col}',row = row, col = col, symbol = '□')
+        #Knoten für Wegfindung
+        self.graph.add_node('Verbindung_zu_Reihe_0')
+        self.graph.add_node('Verbindung_zu_Reihe_8')
 
         #Kanten erzeugen
         for row in range(self.size):
@@ -27,7 +30,11 @@ class Board:
                     self.graph.add_edge(f'{row},{col}', f'{row + 1},{col}')
                 if (f'{row},{col + 1}' in self.graph.nodes):
                     self.graph.add_edge(f'{row},{col}', f'{row},{col + 1}')
-        #TODO Zielknoten hinzufügen die mit zielreihen verbunden sind
+
+        #Kanten für Wegfindung
+        for col in range(self.size):
+            self.graph.add_edge('Verbindung_zu_Reihe_0', f'{0},{col}')
+            self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
         self.player_a = Player(self,0,4,'A')
@@ -66,14 +73,17 @@ class Board:
             self.print_board()
             print(f"Spieler {current_player.name} ist am Zug.")
 
-            action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
-            action_parts = action.split()
 
-            #Wenn spieler a auf spieler b steht (sprung), dann nicht blockieren
-            if current_player == self.player_a and self.player_a.node == self.player_b.node:
+            #Wenn der aktive Spieler über den Anderen springt
+            if self.player_a.node == self.player_b.node:
                 blocking_invalid = True
+                action = input("Sie sind im Sprung über den anderen Spieler, in welcher Richtung möchten sie landen?: (move [direction]): ")
+            #Wenn der aktive Spieler nicht über den Anderen springt (Regelfall)
             else:
                 blocking_invalid = False
+                action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
+
+            action_parts = action.split()
 
             move_ok = True
             #Prüfen des move Befehls
@@ -91,6 +101,7 @@ class Board:
                 row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
                 if not current_player.place_blocking_element(row, col, orientation):
                     print("Blockade konnte nicht platziert werden, bitte erneut versuchen.")
+                    move_ok = False
 
             else:
                 move_ok = False
@@ -100,8 +111,13 @@ class Board:
             #Wechsel des Spielers oder nochmal, falls Spielzug ungültig
             if move_ok:
                 current_player = self.player_b if current_player == self.player_a else self.player_a
-            else:
-                current_player = self.player_a if current_player == self.player_a else self.player_b
+
+            #Falls ein Spieler gerade über den anderen springt
+            if blocking_invalid:
+                #Falls der Sprung geklappt hat (aktualisierung der Symbole zur richtigen Darstellung)
+                if not self.player_a.node == self.player_b.node:
+                    self.player_b.node['symbol'] = 'B'
+                    self.player_a.node['symbol'] = 'A'
 
         #Spiel beendet, Ausgabe des Gewinners
         self.print_board()
@@ -199,8 +215,8 @@ class Player:
             self.board.graph.remove_edge(edge_a[0], edge_a[1])
             self.board.graph.remove_edge(edge_b[0], edge_b[1])
             if (not self.check_if_path_exists()):
-                self.board.add_edge(edge_a[0], edge_a[1])
-                self.board.add_edge(edge_b[0], edge_b[1])
+                self.board.graph.add_edge(edge_a[0], edge_a[1])
+                self.board.graph.add_edge(edge_b[0], edge_b[1])
                 return False
             self.blocks -= 1
             self.board.nodes_used_for_blocking.append(f'{row},{col}')
@@ -208,16 +224,15 @@ class Player:
         return False
 
     def check_if_path_exists(self):
-        #TODO Auf zusatzknoten prüfen, statt ganze zielreihe, wenn zusatzknoten da
         path_player_a_exists = False
         path_player_b_exists = False
-        for col in range(9): #check for both players, if any path to a tile of the goal row exists
-            if nx.has_path(self.board.graph,f'{board.player_a.node["row"]},{board.player_a.node["col"]}',f'{board.player_a.goal},{col}'):
-                path_player_a_exists = True
-            if nx.has_path(self.board.graph,f'{board.player_b.node["row"]},{board.player_b.node["col"]}',f'{board.player_b.goal},{col}'):
-                path_player_b_exists = True
-            if path_player_a_exists and path_player_b_exists:
-                return True
+        #check for both players, if any path to a tile of the goal row exists
+        if nx.has_path(self.board.graph,f'{board.player_a.node["row"]},{board.player_a.node["col"]}','Verbindung_zu_Reihe_8'):
+            path_player_a_exists = True
+        if nx.has_path(self.board.graph,f'{board.player_b.node["row"]},{board.player_b.node["col"]}','Verbindung_zu_Reihe_0'):
+            path_player_b_exists = True
+        if path_player_a_exists and path_player_b_exists:
+            return True
         return False
 
 
@@ -283,6 +298,5 @@ class Blocking_element:
 if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
     board = Board(9)
-    board.graph.remove_edge(f'{4},{4}', f'{5},{4}')
     board.simulate_game()
 
