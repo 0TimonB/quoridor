@@ -1,6 +1,6 @@
 import networkx as nx
 from src.ki.monte_carlo_game_search import *
-
+from src.ki.minimax import *
 
 class Board:
     '''
@@ -39,8 +39,8 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
-        self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
+        self.player_a = Player(self,0,4,'A','manuell')
+        self.player_b = Player(self,8,4,'B','minimax')
         self.nodes_used_for_blocking = []
 
     def copy(self):
@@ -84,37 +84,41 @@ class Board:
             self.print_board()
             print(f"Spieler {current_player.name} ist am Zug.")
 
-            if(current_player.ai == 'manuell'):
-                #Wenn der aktive Spieler über den Anderen springt
+            blocking_invalid = False
+
+            if current_player.ai == 'manuell':
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
-                    action = input("Sie sind im Sprung über den anderen Spieler, in welcher Richtung möchten sie landen?: (move [direction]): ")
-                #Wenn der aktive Spieler nicht über den Anderen springt (Regelfall)
+                    action = input(
+                        "Sie sind im Sprung über den anderen Spieler, in welcher Richtung möchten sie landen?: (move [direction]): ")
                 else:
-                    blocking_invalid = False
                     action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
-            elif(current_player.ai == 'monte_carlo_game_search'):
+
+            elif current_player.ai == 'monte_carlo_game_search':
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
-                else:
-                    blocking_invalid = False
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
                 action = monte_carlo_game_search.search_next_move(100)
+
+            elif current_player.ai == 'minimax':
+                if self.player_a.node == self.player_b.node:
+                    blocking_invalid = True
+                minimax_game_search = MinimaxGameSearch(self, current_player)
+                action = minimax_game_search.search_next_move(3)  # Setze die Tiefe angemessen
+
             action_parts = action.split()
 
             move_ok = True
-            #Prüfen des move Befehls
             if action_parts[0] == 'move' and len(action_parts) == 2:
                 direction = action_parts[1]
                 if not current_player.move(direction):
                     move_ok = False
                     print("Ungültiger Zug, bitte erneut versuchen.")
 
-            #Prüfen des block Befehls
             elif action_parts[0] == 'block' and len(action_parts) == 4:
                 if blocking_invalid:
                     print("Blockieren ist nicht erlaubt, da Sie über den Gegner springen.")
-                    continue  # Gehe zurück zur Eingabeaufforderung
+                    continue
                 row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
                 if not current_player.place_blocking_element(row, col, orientation):
                     print("Blockade konnte nicht platziert werden, bitte erneut versuchen.")
@@ -125,20 +129,19 @@ class Board:
                 print(
                     "Ungültige Aktion. Bitte verwenden Sie 'move [direction]' oder 'block [row] [col] [orientation]'.")
 
-            #Wechsel des Spielers oder nochmal, falls Spielzug ungültig
+            # Wechsel des Spielers oder nochmal, falls Spielzug ungültig
             if move_ok:
                 current_player = self.player_b if current_player == self.player_a else self.player_a
 
-            #Falls ein Spieler gerade über den anderen springt
+            # Falls ein Spieler gerade über den anderen springt
             if blocking_invalid:
-                #Falls der Sprung geklappt hat (aktualisierung der Symbole zur richtigen Darstellung)
                 if not self.player_a.node == self.player_b.node:
                     self.player_b.node['symbol'] = 'B'
                     self.player_a.node['symbol'] = 'A'
             self.player_b.node['symbol'] = 'B'
             self.player_a.node['symbol'] = 'A'
 
-        #Spiel beendet, Ausgabe des Gewinners
+        # Spiel beendet, Ausgabe des Gewinners
         self.print_board()
         if self.player_a.won:
             print("Spieler A hat gewonnen!")

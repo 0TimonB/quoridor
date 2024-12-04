@@ -1,5 +1,7 @@
+import networkx as nx
 from src.game.game import *
 from random import randint
+
 class Monte_carlo_game_search:
     def __init__(self, board, active_player):
         self.board = board.copy()
