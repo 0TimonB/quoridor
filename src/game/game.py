@@ -39,8 +39,8 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A','manuell')
-        self.player_b = Player(self,8,4,'B','minimax')
+        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
+        self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
         self.nodes_used_for_blocking = []
 
     def copy(self):
@@ -98,7 +98,7 @@ class Board:
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
-                action = monte_carlo_game_search.search_next_move(100)
+                action = monte_carlo_game_search.search_next_move(750, True)
 
             elif current_player.ai == 'minimax':
                 if self.player_a.node == self.player_b.node:
