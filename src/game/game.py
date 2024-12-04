@@ -1,4 +1,6 @@
 import networkx as nx
+from src.ki.monte_carlo_game_search import *
+
 
 class Board:
     '''
@@ -37,9 +39,18 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A')
-        self.player_b = Player(self,8,4,'B')
+        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
+        self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
         self.nodes_used_for_blocking = []
+
+    def copy(self):
+        new_board = Board(self.size)
+        new_board.graph = self.graph.copy()
+        new_board.nodes_used_for_blocking = self.nodes_used_for_blocking.copy()
+        new_board.player_a = self.player_a.copy(new_board)
+        new_board.player_b = self.player_b.copy(new_board)
+        return new_board
+
 
     def print_board(self):
         '''
@@ -73,16 +84,22 @@ class Board:
             self.print_board()
             print(f"Spieler {current_player.name} ist am Zug.")
 
-
-            #Wenn der aktive Spieler über den Anderen springt
-            if self.player_a.node == self.player_b.node:
-                blocking_invalid = True
-                action = input("Sie sind im Sprung über den anderen Spieler, in welcher Richtung möchten sie landen?: (move [direction]): ")
-            #Wenn der aktive Spieler nicht über den Anderen springt (Regelfall)
-            else:
-                blocking_invalid = False
-                action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
-
+            if(current_player.ai == 'manuell'):
+                #Wenn der aktive Spieler über den Anderen springt
+                if self.player_a.node == self.player_b.node:
+                    blocking_invalid = True
+                    action = input("Sie sind im Sprung über den anderen Spieler, in welcher Richtung möchten sie landen?: (move [direction]): ")
+                #Wenn der aktive Spieler nicht über den Anderen springt (Regelfall)
+                else:
+                    blocking_invalid = False
+                    action = input("Wählen Sie eine Aktion: (move [direction] oder block [row] [col] [orientation]): ")
+            elif(current_player.ai == 'monte_carlo_game_search'):
+                if self.player_a.node == self.player_b.node:
+                    blocking_invalid = True
+                else:
+                    blocking_invalid = False
+                monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
+                action = monte_carlo_game_search.search_next_move(100)
             action_parts = action.split()
 
             move_ok = True
@@ -118,6 +135,8 @@ class Board:
                 if not self.player_a.node == self.player_b.node:
                     self.player_b.node['symbol'] = 'B'
                     self.player_a.node['symbol'] = 'A'
+            self.player_b.node['symbol'] = 'B'
+            self.player_a.node['symbol'] = 'A'
 
         #Spiel beendet, Ausgabe des Gewinners
         self.print_board()
@@ -127,7 +146,7 @@ class Board:
             print("Spieler B hat gewonnen!")
 
 class Player:
-    def __init__(self, board, row, col, name):
+    def __init__(self, board, row, col, name, ai):
         '''
         Player repräsentiert einen der beiden Spieler auf dem Spielfeld
         :param board: Das Spielfeld, auf welchem gespielt wird
@@ -141,11 +160,20 @@ class Player:
         self.node['symbol'] = self.name
         self.blocks = 10
         self.won = False
+        self.row = -1
+        self.ai = ai
 
         if (row == 0):
             self.goal = 8
         if (row == 8):
             self.goal = 0
+
+    def copy(self, board):
+        new_player = Player(board,self.node['row'],self.node['col'],self.name,self.ai)
+        new_player.goal = self.goal
+        new_player.blocks = self.blocks
+        new_player.won = False
+        return new_player
 
     def game_won(self):
         '''
@@ -169,19 +197,19 @@ class Player:
         next_node = self.node
         if((direction == 'right')
                 and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"]},{self.node["col"] + 1}') in self.board.graph.edges): #String zur Identifikation der Kante prüfen
-            next_node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] + 1}')
+            next_node = self.board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] + 1}')
             moved = True
         elif((direction == 'left')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"]},{self.node["col"] - 1}') in self.board.graph.edges):
-            next_node = board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] - 1}')
+            next_node = self.board.graph.nodes.get(f'{self.node["row"]},{self.node["col"] - 1}')
             moved = True
         elif((direction == 'up')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"] - 1},{self.node["col"]}') in self.board.graph.edges):
-            next_node = board.graph.nodes.get(f'{self.node["row"] - 1},{self.node["col"]}')
+            next_node = self.board.graph.nodes.get(f'{self.node["row"] - 1},{self.node["col"]}')
             moved = True
         elif((direction == 'down')
              and (f'{self.node["row"]},{self.node["col"]}',f'{self.node["row"] + 1},{self.node["col"]}') in self.board.graph.edges):
-            next_node = board.graph.nodes.get(f'{self.node["row"] + 1},{self.node["col"]}')
+            next_node = self.board.graph.nodes.get(f'{self.node["row"] + 1},{self.node["col"]}')
             moved = True
 
         if(moved):
@@ -190,8 +218,8 @@ class Player:
             self.node['symbol'] = self.name #neues Feld bekommt Symbol vom Spieler
             self.game_won() #Prüfung, ob das Spiel gewonnen wurde
         if((moved is False) or #Bewegung war ungültig
-                (moved is True and self.name == 'A' and self.node == board.player_b.node) # oder Spieler A springt über Spieler B
-                or (moved is True and self.name == 'B' and self.node == board.player_a.node)): #oder Spieler B springt über Spieler A
+                (moved is True and self.name == 'A' and self.node == self.board.player_b.node) # oder Spieler A springt über Spieler B
+                or (moved is True and self.name == 'B' and self.node == self.board.player_a.node)): #oder Spieler B springt über Spieler A
             return False
         return True #Bewegung war gültig und der Spieler springt nicht über den anderen
 
@@ -226,10 +254,14 @@ class Player:
     def check_if_path_exists(self):
         path_player_a_exists = False
         path_player_b_exists = False
+        graph_for_player_a = self.board.graph.copy()
+        graph_for_player_a.remove_node('Verbindung_zu_Reihe_0')
+        graph_for_player_b = self.board.graph.copy()
+        graph_for_player_b.remove_node('Verbindung_zu_Reihe_8')
         #check for both players, if any path to a tile of the goal row exists
-        if nx.has_path(self.board.graph,f'{board.player_a.node["row"]},{board.player_a.node["col"]}','Verbindung_zu_Reihe_8'):
+        if nx.has_path(graph_for_player_a,f'{self.board.player_a.node["row"]},{self.board.player_a.node["col"]}','Verbindung_zu_Reihe_8'):
             path_player_a_exists = True
-        if nx.has_path(self.board.graph,f'{board.player_b.node["row"]},{board.player_b.node["col"]}','Verbindung_zu_Reihe_0'):
+        if nx.has_path(graph_for_player_b,f'{self.board.player_b.node["row"]},{self.board.player_b.node["col"]}','Verbindung_zu_Reihe_0'):
             path_player_b_exists = True
         if path_player_a_exists and path_player_b_exists:
             return True
