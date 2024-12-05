@@ -39,7 +39,7 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
+        self.player_a = Player(self,0,4,'A','minimax')
         self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
         self.nodes_used_for_blocking = []
 
