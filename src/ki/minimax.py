@@ -5,7 +5,7 @@ from src.game.game import *
 class MinimaxGameSearch:
     def __init__(self, board, active_player):
         self.board = board.copy()
-        self.active_player = active_player
+        self.active_player = self.board.player_a if active_player.node['symbol'] == 'A' else self.board.player_b
         self.opponent = self.board.player_b if active_player == self.board.player_a else self.board.player_a
 
     def minimax(self, depth, alpha, beta, maximizing_player):
@@ -52,11 +52,11 @@ class MinimaxGameSearch:
         # Kürzeste Distanz des aktiven Spielers zur Zielreihe
         player_a_dist = nx.shortest_path_length(
             self.board.graph, source=f'{self.board.player_a.node["row"]},{self.board.player_a.node["col"]}',
-            target=f'{self.board.size - 1},0'  # Ziel für Spieler A
+            target=f'Verbindung_zu_Reihe_8'  # Ziel für Spieler A
         )
         player_b_dist = nx.shortest_path_length(
             self.board.graph, source=f'{self.board.player_b.node["row"]},{self.board.player_b.node["col"]}',
-            target=f'0,0'  # Ziel für Spieler B
+            target=f'Verbindung_zu_Reihe_0'  # Ziel für Spieler B
         )
 
         # Je kürzer die Distanz, desto höher der Score
@@ -69,22 +69,66 @@ class MinimaxGameSearch:
         return score
 
     def get_all_possible_moves(self, player):
-        possible_moves = []
-        current_position = player.node
+        current_player = player
 
         # Überprüfe mögliche Bewegungen
-        for neighbor in nx.neighbors(self.board.graph, f'{current_position["row"]},{current_position["col"]}'):
-            if self.is_valid_move(player, neighbor):
-                possible_moves.append(f"move {neighbor}")  # Rückgabe als String
+        # mögliche nächste Züge
+        possible_actions = []
+        # mögliche Bewegungen erzeugen
+        possible_moves = list(
+            nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
+        if (current_player.node['row'] == 0):
+            possible_moves.remove('Verbindung_zu_Reihe_0')
+        elif (current_player.node['row'] == 8):
+            possible_moves.remove('Verbindung_zu_Reihe_8')
+        while {} in possible_moves:
+            possible_moves.remove({})
+        # mögliche Bewegungen zu möglichen Zügen hinzufügen
+        for move in possible_moves:
+            move_parts = move.split(',')
+            if int(move_parts[0]) < current_player.node['row']:
+                possible_actions.append('move up')
+            elif int(move_parts[0]) > current_player.node['row']:
+                possible_actions.append('move down')
+            elif int(move_parts[1]) < current_player.node['col']:
+                possible_actions.append('move left')
+            elif int(move_parts[1]) > current_player.node['col']:
+                possible_actions.append('move right')
 
         # Füge mögliche Blockierungen hinzu
-        for row in range(self.board.size):
-            for col in range(self.board.size):
-                if f'{row},{col}' not in self.board.nodes_used_for_blocking:
-                    for orientation in ['horizontal', 'vertical']:
-                        if player.place_blocking_element(row, col, orientation):
-                            possible_moves.append(f"block {row} {col} {orientation}")  # Rückgabe als String
-        return possible_moves
+        if current_player.blocks > 0 and self.board.player_a.node != self.board.player_b.node:
+            # Welcher Spieler blockiert? + Nachbarknoten des Gegners hinzufügen
+            if current_player == self.board.player_b:
+                blocking_nodes = list(nx.neighbors(self.board.graph,
+                                                   f"{self.board.player_a.node['row']},{self.board.player_a.node['col']}"))
+
+            else:
+                blocking_nodes = list(nx.neighbors(self.board.graph,
+                                                   f"{self.board.player_b.node['row']},{self.board.player_b.node['col']}"))
+
+            if 'Verbindung_zu_Reihe_0' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_0')
+            if 'Verbindung_zu_Reihe_8' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_8')
+
+            # Nachbar-nachbar-Knoten hinzufügen
+            neighbour_nodes = []
+            for neighbour in blocking_nodes:
+                for neighbour_node in nx.neighbors(self.board.graph,
+                                                   f"{neighbour.split(',')[0]},{neighbour.split(',')[1]}"):
+                    neighbour_nodes.append(neighbour_node)
+            for neighbour in neighbour_nodes:
+                if not neighbour in blocking_nodes:
+                    blocking_nodes.append(neighbour)
+            if 'Verbindung_zu_Reihe_0' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_0')
+            if 'Verbindung_zu_Reihe_8' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_8')
+
+            # zulässige ermittelte Knoten zu möglichen Zügen hinzufügen
+            for node in blocking_nodes:
+                if node not in self.board.nodes_used_for_blocking:
+                    split_node = node.split(',')
+                    if int(split_node[0]) != 8:
+                        possible_actions.append(f"block {split_node[0]} {split_node[1]} horizontal")
+                        possible_actions.append(f"block {split_node[0]} {split_node[1]} vertical")
+        return possible_actions
 
     def is_valid_move(self, player, target):
         # Prüfen, ob der Knoten im richtigen Format 'row,col' vorliegt
@@ -99,8 +143,7 @@ class MinimaxGameSearch:
 
         if action == "move":
             target = action_parts[1]
-            row, col = map(int, target.split(','))
-            self.active_player.node = {"row": row, "col": col}
+            self.active_player.move(target)
         elif action == "block":
             row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
             self.active_player.place_blocking_element(row, col, orientation)
@@ -111,10 +154,26 @@ class MinimaxGameSearch:
 
         if action == "move":
             # Rückgängig machen des Moves (falls vorherige Position gespeichert wurde)
+            target = action_parts[1]
+            if target == 'up':
+                target = 'down'
+            elif target == 'down':
+                target = 'up'
+            elif target == 'left':
+                target = 'right'
+            elif target == 'right':
+                target = 'left'
+            self.active_player.move(target)
             pass
         elif action == "block":
             row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
             # Blockade rückgängig machen (Kante wieder hinzufügen etc.)
+            if orientation == 'vertical':
+                self.board.graph.add_edge(f"{row},{col}", f"{row + 1},{col}")
+                self.board.graph.add_edge(f"{row},{col + 1}", f"{row + 1},{col + 1}")
+            elif orientation == 'horizontal':
+                self.board.graph.add_edge(f"{row},{col}", f"{row},{col + 1}")
+                self.board.graph.add_edge(f"{row + 1},{col}", f"{row + 1},{col + 1}")
             pass
 
     def search_next_move(self, depth):

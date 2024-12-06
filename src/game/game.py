@@ -98,13 +98,13 @@ class Board:
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
-                action = monte_carlo_game_search.search_next_move(750, True)
+                action = monte_carlo_game_search.search_next_move(500, True)
 
             elif current_player.ai == 'minimax':
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 minimax_game_search = MinimaxGameSearch(self, current_player)
-                action = minimax_game_search.search_next_move(3)  # Setze die Tiefe angemessen
+                action = minimax_game_search.search_next_move(10)  # Setze die Tiefe angemessen
 
             action_parts = action.split()
 

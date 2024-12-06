@@ -15,32 +15,31 @@ class Monte_carlo_game_search:
     def random_game(self, search_path):
         current_player = self.active_player
         first_move = ''
-        possible_nodes_for_blocking = list(self.board.graph.nodes().values()).copy()
         while not self.board.player_a.won and not self.board.player_b.won:
             #mögliche nächste Züge
             possible_actions = []
-            if first_move != '' or not search_path:
                 #mögliche Bewegungen erzeugen
-                possible_moves = list(
-                    nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
-                if (current_player.node['row'] == 0):
-                    possible_moves.remove('Verbindung_zu_Reihe_0')
-                elif (current_player.node['row'] == 8):
-                    possible_moves.remove('Verbindung_zu_Reihe_8')
-                while {} in possible_moves:
-                    possible_moves.remove({})
-                #mögliche Bewegungen zu möglichen Zügen hinzufügen
-                for move in possible_moves:
-                    move_parts = move.split(',')
-                    if int(move_parts[0]) < current_player.node['row']:
-                        possible_actions.append('move up')
-                    elif int(move_parts[0]) > current_player.node['row']:
-                        possible_actions.append('move down')
-                    elif int(move_parts[1]) < current_player.node['col']:
-                        possible_actions.append('move left')
-                    elif int(move_parts[1]) > current_player.node['col']:
-                        possible_actions.append('move right')
+            possible_moves = list(
+                nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
+            if (current_player.node['row'] == 0):
+                possible_moves.remove('Verbindung_zu_Reihe_0')
+            elif (current_player.node['row'] == 8):
+                possible_moves.remove('Verbindung_zu_Reihe_8')
+            while {} in possible_moves:
+                possible_moves.remove({})
+            #mögliche Bewegungen zu möglichen Zügen hinzufügen
+            for move in possible_moves:
+                move_parts = move.split(',')
+                if int(move_parts[0]) < current_player.node['row']:
+                    possible_actions.append('move up')
+                elif int(move_parts[0]) > current_player.node['row']:
+                    possible_actions.append('move down')
+                elif int(move_parts[1]) < current_player.node['col']:
+                    possible_actions.append('move left')
+                elif int(move_parts[1]) > current_player.node['col']:
+                    possible_actions.append('move right')
             if search_path and first_move == '':
+                #falls search_path == true, wird beim ersten Zug der Bestmögliche zug 2 mal hinzugefügt
                 if current_player.node['symbol'] == 'A':
                     path_search_graph = self.board.graph.copy()
                     path_search_graph.remove_node('Verbindung_zu_Reihe_0')
@@ -50,22 +49,17 @@ class Monte_carlo_game_search:
                     path_search_graph.remove_node('Verbindung_zu_Reihe_8')
                     shortest_way = nx.shortest_path(path_search_graph, f"{current_player.node['row']},{current_player.node['col']}",'Verbindung_zu_Reihe_0')
                 move_parts = shortest_way[1].split(',')
+                best_move = ''
                 if int(move_parts[0]) < current_player.node['row']:
-                    possible_actions.append('move up')
-                    possible_actions.append('move up')
-                    possible_actions.append('move up')
+                    best_move = 'move up'
                 elif int(move_parts[0]) > current_player.node['row']:
-                    possible_actions.append('move down')
-                    possible_actions.append('move down')
-                    possible_actions.append('move down')
+                    best_move = 'move down'
                 elif int(move_parts[1]) < current_player.node['col']:
-                    possible_actions.append('move left')
-                    possible_actions.append('move left')
-                    possible_actions.append('move left')
+                    best_move = 'move left'
                 elif int(move_parts[1]) > current_player.node['col']:
-                    possible_actions.append('move right')
-                    possible_actions.append('move right')
-                    possible_actions.append('move right')
+                    best_move = 'move right'
+                possible_actions.append(best_move)
+                possible_actions.append(best_move)
             #blockieren
             if current_player.blocks > 0 and self.board.player_a.node != self.board.player_b.node:
                 #Welcher Spieler blockiert? + Nachbarknoten des Gegners hinzufügen
