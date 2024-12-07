@@ -98,7 +98,7 @@ class Board:
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
-                action = monte_carlo_game_search.search_next_move(500, True)
+                action = monte_carlo_game_search.search_next_move(100, True)
 
             elif current_player.ai == 'minimax':
                 if self.player_a.node == self.player_b.node:
