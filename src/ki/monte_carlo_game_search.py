@@ -78,7 +78,7 @@ class Monte_carlo_game_search:
                     for neighbour_node in nx.neighbors(self.board.graph,f"{neighbour.split(',')[0]},{neighbour.split(',')[1]}"):
                         neighbour_nodes.append(neighbour_node)
                 for neighbour in neighbour_nodes:
-                    if not neighbour in blocking_nodes:
+                    if neighbour  not in blocking_nodes and neighbour not in self.board.nodes_used_for_blocking:
                         blocking_nodes.append(neighbour)
                 if 'Verbindung_zu_Reihe_0' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_0')
                 if 'Verbindung_zu_Reihe_8' in blocking_nodes: blocking_nodes.remove('Verbindung_zu_Reihe_8')

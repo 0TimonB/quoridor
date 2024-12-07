@@ -8,16 +8,16 @@ class MinimaxGameSearch:
         self.active_player = self.board.player_a if active_player.node['symbol'] == 'A' else self.board.player_b
         self.opponent = self.board.player_b if active_player == self.board.player_a else self.board.player_a
 
-    def minimax(self, depth, alpha, beta, maximizing_player):
+    def minimax(self, depth, alpha, beta, maximizing_player, lowest_move):
         if depth == 0 or self.is_terminal_node():
-            return self.evaluate_board(), None
+            return self.evaluate_board(), lowest_move
 
         if maximizing_player:  # Maximizing player (current player)
             max_eval = float('-inf')
             best_move = None
             for move in self.get_all_possible_moves(self.active_player):
                 self.perform_move(move)
-                eval = self.minimax(depth - 1, alpha, beta, False)[0]
+                eval = self.minimax(depth - 1, alpha, beta, False, move)[0]
                 self.undo_move(move)
 
                 if eval > max_eval:
@@ -32,7 +32,7 @@ class MinimaxGameSearch:
             best_move = None
             for move in self.get_all_possible_moves(self.opponent):
                 self.perform_move(move)
-                eval = self.minimax(depth - 1, alpha, beta, True)[0]
+                eval = self.minimax(depth - 1, alpha, beta, True, move)[0]
                 self.undo_move(move)
 
                 if eval < min_eval:
@@ -50,12 +50,17 @@ class MinimaxGameSearch:
         score = 0
 
         # Kürzeste Distanz des aktiven Spielers zur Zielreihe
+        player_a_graph = self.board.graph.copy()
+        player_a_graph.remove_node('Verbindung_zu_Reihe_0')
+        player_b_graph = self.board.graph.copy()
+        player_b_graph.remove_node('Verbindung_zu_Reihe_8')
+
         player_a_dist = nx.shortest_path_length(
-            self.board.graph, source=f'{self.board.player_a.node["row"]},{self.board.player_a.node["col"]}',
+            player_a_graph, source=f'{self.board.player_a.node["row"]},{self.board.player_a.node["col"]}',
             target=f'Verbindung_zu_Reihe_8'  # Ziel für Spieler A
         )
         player_b_dist = nx.shortest_path_length(
-            self.board.graph, source=f'{self.board.player_b.node["row"]},{self.board.player_b.node["col"]}',
+            player_b_graph, source=f'{self.board.player_b.node["row"]},{self.board.player_b.node["col"]}',
             target=f'Verbindung_zu_Reihe_0'  # Ziel für Spieler B
         )
 
@@ -64,7 +69,7 @@ class MinimaxGameSearch:
         score += player_b_dist
 
         # Berücksichtige verbleibende Blockelemente
-        #score += self.board.player_a.blocks - self.board.player_b.blocks
+        score -= self.board.player_a.blocks
 
         return score
 
@@ -177,7 +182,7 @@ class MinimaxGameSearch:
             pass
 
     def search_next_move(self, depth):
-        _, best_move = self.minimax(depth, float('-inf'), float('inf'), True)
+        _, best_move = self.minimax(depth, float('-inf'), float('inf'), True, None)
         return best_move
 
 
