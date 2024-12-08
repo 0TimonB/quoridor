@@ -8,8 +8,7 @@ class MinimaxGameSearch:
 
     def minimax(self, depth, alpha, beta, maximizing_player, lowest_move):
         if depth == 0 or self.is_terminal_node():
-            return self.evaluate_board(self.active_player if not maximizing_player else self.opponent), lowest_move
-
+            return self.evaluate_board(self.active_player if maximizing_player else self.opponent), lowest_move
         if maximizing_player:  # Maximizing player (current player)
             max_eval = float('-inf')
             best_move = None
@@ -22,7 +21,7 @@ class MinimaxGameSearch:
                     max_eval = eval
                     best_move = move
                 alpha = max(alpha, eval)
-                if beta <= alpha:
+                if alpha >= beta:
                     break
             return max_eval, best_move
         else:  # Minimizing player (opponent)
@@ -37,9 +36,10 @@ class MinimaxGameSearch:
                     min_eval = eval
                     best_move = move
                 beta = min(beta, eval)
-                if beta <= alpha:
+                if alpha >= beta:
                     break
             return min_eval, best_move
+
 
     def is_terminal_node(self):
         return self.board.player_a.won or self.board.player_b.won
@@ -68,13 +68,13 @@ class MinimaxGameSearch:
             score -= player_a_dist
             score += player_b_dist
             # Verbleibende Blockierungen als Bonus werten
-            score -= self.board.player_a.blocks - self.board.player_b.blocks
+            #score -= self.board.player_a.blocks - self.board.player_b.blocks
         else:
             # Spieler B versucht die eigene Distanz zu minimieren und die des Gegners zu maximieren
             score -= player_b_dist
             score += player_a_dist
             # Verbleibende Blockierungen als Bonus werten
-            score -= self.board.player_b.blocks - self.board.player_a.blocks
+            #score -= self.board.player_b.blocks - self.board.player_a.blocks
 
         return score
 
@@ -84,26 +84,32 @@ class MinimaxGameSearch:
         # Überprüfe mögliche Bewegungen
         # mögliche nächste Züge
         possible_actions = []
+
         # mögliche Bewegungen erzeugen
-        possible_moves = list(
-            nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
-        if (current_player.node['row'] == 0):
-            possible_moves.remove('Verbindung_zu_Reihe_0')
-        elif (current_player.node['row'] == 8):
-            possible_moves.remove('Verbindung_zu_Reihe_8')
-        while {} in possible_moves:
-            possible_moves.remove({})
+        if current_player.node['symbol'] == 'A':
+            path_search_graph = self.board.graph.copy()
+            path_search_graph.remove_node('Verbindung_zu_Reihe_0')
+            shortest_way = nx.shortest_path(path_search_graph,
+                                            f"{current_player.node['row']},{current_player.node['col']}",
+                                            'Verbindung_zu_Reihe_8')
+        else:
+            path_search_graph = self.board.graph.copy()
+            path_search_graph.remove_node('Verbindung_zu_Reihe_8')
+            shortest_way = nx.shortest_path(path_search_graph,
+                                            f"{current_player.node['row']},{current_player.node['col']}",
+                                            'Verbindung_zu_Reihe_0')
+        move_parts = shortest_way[1].split(',')
         # mögliche Bewegungen zu möglichen Zügen hinzufügen
-        for move in possible_moves:
-            move_parts = move.split(',')
-            if int(move_parts[0]) < current_player.node['row']:
-                possible_actions.append('move up')
-            elif int(move_parts[0]) > current_player.node['row']:
-                possible_actions.append('move down')
-            elif int(move_parts[1]) < current_player.node['col']:
-                possible_actions.append('move left')
-            elif int(move_parts[1]) > current_player.node['col']:
-                possible_actions.append('move right')
+        best_move = ''
+        if int(move_parts[0]) < current_player.node['row']:
+            best_move = 'move up'
+        elif int(move_parts[0]) > current_player.node['row']:
+            best_move = 'move down'
+        elif int(move_parts[1]) < current_player.node['col']:
+            best_move = 'move left'
+        elif int(move_parts[1]) > current_player.node['col']:
+            best_move = 'move right'
+        possible_actions.append(best_move)
 
         # Füge mögliche Blockierungen hinzu
         if current_player.blocks > 0 and self.board.player_a.node != self.board.player_b.node:

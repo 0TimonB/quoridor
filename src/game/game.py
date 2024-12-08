@@ -39,7 +39,7 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
+        self.player_a = Player(self,0,4,'A','minimax')
         self.player_b = Player(self,8,4,'B','minimax')
         self.nodes_used_for_blocking = []
 
@@ -98,13 +98,13 @@ class Board:
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
-                action = monte_carlo_game_search.search_next_move(20, True)
+                action = monte_carlo_game_search.search_next_move(50, True)
 
             elif current_player.ai == 'minimax':
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 minimax_game_search = MinimaxGameSearch(self, current_player)
-                action = minimax_game_search.search_next_move(2)  # Setze die Tiefe angemessen
+                action = minimax_game_search.search_next_move(100)  # Setze die Tiefe angemessen
 
             action_parts = action.split()
 
@@ -332,7 +332,7 @@ class Blocking_element:
 
 if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
-    for i in range(50):
+    for i in range(1):
         board = Board(9)
         board.simulate_game()
 

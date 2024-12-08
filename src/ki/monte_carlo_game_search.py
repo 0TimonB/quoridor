@@ -19,25 +19,26 @@ class Monte_carlo_game_search:
             #mögliche nächste Züge
             possible_actions = []
                 #mögliche Bewegungen erzeugen
-            possible_moves = list(
-                nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
-            if (current_player.node['row'] == 0):
-                possible_moves.remove('Verbindung_zu_Reihe_0')
-            elif (current_player.node['row'] == 8):
-                possible_moves.remove('Verbindung_zu_Reihe_8')
-            while {} in possible_moves:
-                possible_moves.remove({})
+            if first_move != '' or not search_path:
+                possible_moves = list(
+                    nx.neighbors(self.board.graph, f"{current_player.node['row']},{current_player.node['col']}"))
+                if (current_player.node['row'] == 0):
+                    possible_moves.remove('Verbindung_zu_Reihe_0')
+                elif (current_player.node['row'] == 8):
+                    possible_moves.remove('Verbindung_zu_Reihe_8')
+                while {} in possible_moves:
+                    possible_moves.remove({})
             #mögliche Bewegungen zu möglichen Zügen hinzufügen
-            for move in possible_moves:
-                move_parts = move.split(',')
-                if int(move_parts[0]) < current_player.node['row']:
-                    possible_actions.append('move up')
-                elif int(move_parts[0]) > current_player.node['row']:
-                    possible_actions.append('move down')
-                elif int(move_parts[1]) < current_player.node['col']:
-                    possible_actions.append('move left')
-                elif int(move_parts[1]) > current_player.node['col']:
-                    possible_actions.append('move right')
+                for move in possible_moves:
+                    move_parts = move.split(',')
+                    if int(move_parts[0]) < current_player.node['row']:
+                        possible_actions.append('move up')
+                    elif int(move_parts[0]) > current_player.node['row']:
+                        possible_actions.append('move down')
+                    elif int(move_parts[1]) < current_player.node['col']:
+                        possible_actions.append('move left')
+                    elif int(move_parts[1]) > current_player.node['col']:
+                        possible_actions.append('move right')
             if search_path and first_move == '':
                 #falls search_path == true, wird beim ersten Zug der Bestmögliche zug 2 mal hinzugefügt
                 if current_player.node['symbol'] == 'A':
