@@ -64,12 +64,19 @@ class MinimaxGameSearch:
             target=f'Verbindung_zu_Reihe_0'  # Ziel für Spieler B
         )
 
-        # Je kürzer die Distanz, desto höher der Score
-        score -= player_a_dist
-        score += player_b_dist
-
-        # Berücksichtige verbleibende Blockelemente
-        score -= self.board.player_a.blocks
+        # Bewertung aus Sicht des aktiven Spielers
+        if self.active_player == self.board.player_a:
+            # Spieler A versucht die eigene Distanz zu minimieren und die des Gegners zu maximieren
+            score -= player_a_dist
+            score += player_b_dist
+            # Verbleibende Blockierungen als Bonus werten
+            score += self.board.player_a.blocks - self.board.player_b.blocks
+        else:
+            # Spieler B versucht die eigene Distanz zu minimieren und die des Gegners zu maximieren
+            score -= player_b_dist
+            score += player_a_dist
+            # Verbleibende Blockierungen als Bonus werten
+            score += self.board.player_b.blocks - self.board.player_a.blocks
 
         return score
 

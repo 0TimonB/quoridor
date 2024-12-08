@@ -40,7 +40,7 @@ class Board:
 
         #Spieler erzeugen
         self.player_a = Player(self,0,4,'A','minimax')
-        self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
+        self.player_b = Player(self,8,4,'B','minimax')
         self.nodes_used_for_blocking = []
 
     def copy(self):
