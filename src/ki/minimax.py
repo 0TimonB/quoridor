@@ -1,7 +1,5 @@
 import networkx as nx
 from src.game.game import *
-
-
 class MinimaxGameSearch:
     def __init__(self, board, active_player):
         self.board = board.copy()
@@ -10,7 +8,7 @@ class MinimaxGameSearch:
 
     def minimax(self, depth, alpha, beta, maximizing_player, lowest_move):
         if depth == 0 or self.is_terminal_node():
-            return self.evaluate_board(), lowest_move
+            return self.evaluate_board(self.active_player if not maximizing_player else self.opponent), lowest_move
 
         if maximizing_player:  # Maximizing player (current player)
             max_eval = float('-inf')
@@ -46,7 +44,7 @@ class MinimaxGameSearch:
     def is_terminal_node(self):
         return self.board.player_a.won or self.board.player_b.won
 
-    def evaluate_board(self):
+    def evaluate_board(self, current_player):
         score = 0
 
         # Kürzeste Distanz des aktiven Spielers zur Zielreihe
@@ -65,18 +63,18 @@ class MinimaxGameSearch:
         )
 
         # Bewertung aus Sicht des aktiven Spielers
-        if self.active_player == self.board.player_a:
+        if current_player == self.board.player_a:
             # Spieler A versucht die eigene Distanz zu minimieren und die des Gegners zu maximieren
             score -= player_a_dist
             score += player_b_dist
             # Verbleibende Blockierungen als Bonus werten
-            score += self.board.player_a.blocks - self.board.player_b.blocks
+            score -= self.board.player_a.blocks - self.board.player_b.blocks
         else:
             # Spieler B versucht die eigene Distanz zu minimieren und die des Gegners zu maximieren
             score -= player_b_dist
             score += player_a_dist
             # Verbleibende Blockierungen als Bonus werten
-            score += self.board.player_b.blocks - self.board.player_a.blocks
+            score -= self.board.player_b.blocks - self.board.player_a.blocks
 
         return score
 
@@ -135,10 +133,22 @@ class MinimaxGameSearch:
 
             # zulässige ermittelte Knoten zu möglichen Zügen hinzufügen
             for node in blocking_nodes:
-                if node not in self.board.nodes_used_for_blocking:
-                    split_node = node.split(',')
-                    if int(split_node[0]) != 8:
+                split_node = node.split(',')
+                row = int(split_node[0])
+                col = int(split_node[1])
+
+                if not f'{row},{col}' in self.board.nodes_used_for_blocking:
+                    self.pos_a = f'{row},{col}'
+                    self.pos_b = f'{row + 1},{col}'
+                    self.pos_c = f'{row},{col + 1}'
+                    self.pos_d = f'{row + 1},{col + 1}'
+                    if current_player.place_blocking_element(row, col, 'horizontal'):
+                        self.board.graph.add_edge(self.pos_a, self.pos_c)
+                        self.board.graph.add_edge(self.pos_b, self.pos_d)
                         possible_actions.append(f"block {split_node[0]} {split_node[1]} horizontal")
+                    if current_player.place_blocking_element(row, col, 'vertical'):
+                        self.board.graph.add_edge(self.pos_a, self.pos_b)
+                        self.board.graph.add_edge(self.pos_c, self.pos_d)
                         possible_actions.append(f"block {split_node[0]} {split_node[1]} vertical")
         return possible_actions
 

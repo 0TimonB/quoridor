@@ -60,6 +60,7 @@ class Monte_carlo_game_search:
                     best_move = 'move right'
                 possible_actions.append(best_move)
                 possible_actions.append(best_move)
+                possible_actions.append(best_move)
             #blockieren
             if current_player.blocks > 0 and self.board.player_a.node != self.board.player_b.node:
                 #Welcher Spieler blockiert? + Nachbarknoten des Gegners hinzufügen
@@ -85,10 +86,21 @@ class Monte_carlo_game_search:
 
                 #zulässige ermittelte Knoten zu möglichen Zügen hinzufügen
                 for node in blocking_nodes:
-                    if node not in self.board.nodes_used_for_blocking:
-                        split_node = node.split(',')
-                        if int(split_node[0]) != 8:
+                    split_node = node.split(',')
+                    # if int(split_node[0]) != 8:
+                    row = int(split_node[0])
+                    col = int(split_node[1])
+
+                    if not f'{row},{col}' in self.board.nodes_used_for_blocking:
+                        self.pos_a = f'{row},{col}'
+                        self.pos_b = f'{row + 1},{col}'
+                        self.pos_c = f'{row},{col + 1}'
+                        self.pos_d = f'{row + 1},{col + 1}'
+                        if (self.pos_a, self.pos_b) in self.board.graph.edges and (
+                        self.pos_c, self.pos_d) in self.board.graph.edges:
                             possible_actions.append(f"block {split_node[0]} {split_node[1]} horizontal")
+                        if (self.pos_a, self.pos_c) in self.board.graph.edges and (
+                        self.pos_b, self.pos_d) in self.board.graph.edges:
                             possible_actions.append(f"block {split_node[0]} {split_node[1]} vertical")
 
             #zufälligen Zug aus den möglichkeiten ausführen
