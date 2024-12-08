@@ -1,3 +1,5 @@
+import time
+
 import networkx as nx
 from src.ki.monte_carlo_game_search import *
 from src.ki.minimax import *
@@ -40,7 +42,7 @@ class Board:
 
         #Spieler erzeugen
         self.player_a = Player(self,0,4,'A','minimax')
-        self.player_b = Player(self,8,4,'B','minimax')
+        self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
         self.nodes_used_for_blocking = []
 
     def copy(self):
@@ -80,9 +82,10 @@ class Board:
 
     def simulate_game(self):
         current_player = self.player_a
+        start_time = time.perf_counter()
         while not self.player_a.won and not self.player_b.won:
-            self.print_board()
-            print(f"Spieler {current_player.name} ist am Zug.")
+            #self.print_board()
+            #print(f"Spieler {current_player.name} ist am Zug.")
 
             blocking_invalid = False
 
@@ -98,13 +101,13 @@ class Board:
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 monte_carlo_game_search = Monte_carlo_game_search(self, current_player)
-                action = monte_carlo_game_search.search_next_move(50, True)
+                action = monte_carlo_game_search.search_next_move(500, True)
 
             elif current_player.ai == 'minimax':
                 if self.player_a.node == self.player_b.node:
                     blocking_invalid = True
                 minimax_game_search = MinimaxGameSearch(self, current_player)
-                action = minimax_game_search.search_next_move(100)  # Setze die Tiefe angemessen
+                action = minimax_game_search.search_next_move(6)  # Setze die Tiefe angemessen
 
             action_parts = action.split()
 
@@ -113,7 +116,7 @@ class Board:
                 direction = action_parts[1]
                 if not current_player.move(direction):
                     move_ok = False
-                    print("Ungültiger Zug, bitte erneut versuchen.")
+                    #print("Ungültiger Zug, bitte erneut versuchen.")
 
             elif action_parts[0] == 'block' and len(action_parts) == 4:
                 if blocking_invalid:
@@ -142,11 +145,27 @@ class Board:
             self.player_a.node['symbol'] = 'A'
 
         # Spiel beendet, Ausgabe des Gewinners
-        self.print_board()
+        #self.print_board()
+
+        end_time = time.perf_counter()
         if self.player_a.won:
-            print("Spieler A hat gewonnen!")
+            #print("Spieler A hat gewonnen!")
+            print(f'minimax,monte_carlo,6,500,{(end_time - start_time):.3f},monte_carlo')
         else:
-            print("Spieler B hat gewonnen!")
+            #print("Spieler B hat gewonnen!")
+            print(f'minimax,monte_carlo,6,500,{(end_time - start_time):.3f},minimax')
+    def get_possible_blocks(self, board):
+        possible_blocks = []
+        for row in range(self.size -1):
+            for col in range(self.size -1):
+                if f"{row},{col}" not in self.nodes_used_for_blocking:
+                    blockade = Blocking_element(board, row, col, 'horizontal').return_blocked_paths()
+                    if blockade[0] in self.graph.edges and blockade[1] in self.graph.edges:
+                        possible_blocks.append(f"{row},{col},horizontal")
+                    blockade = Blocking_element(board, row, col, 'vertical').return_blocked_paths()
+                    if blockade[0] in self.graph.edges and blockade[1] in self.graph.edges:
+                        possible_blocks.append(f"{row},{col},vertical")
+        return possible_blocks
 
 class Player:
     def __init__(self, board, row, col, name, ai):
@@ -332,7 +351,8 @@ class Blocking_element:
 
 if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
-    for i in range(1):
+    print('player_a,player_b,minimax_depth,monte_iter,time,won')
+    for i in range(14):
         board = Board(9)
         board.simulate_game()
 

@@ -5,12 +5,14 @@ from random import randint
 class Monte_carlo_game_search:
     def __init__(self, board, active_player):
         self.board = board.copy()
+        self.board.player_a.board = self.board
+        self.board.player_b.board = self.board
         if active_player.node['symbol'] == 'A':
             self.active_player = self.board.player_a
-            self.board.player_b.blocks = 0
+            #self.board.player_b.blocks = 0
         else:
             self.active_player = self.board.player_b
-            self.board.player_a.blocks = 0
+            #self.board.player_a.blocks = 0
 
     def random_game(self, search_path):
         current_player = self.active_player
