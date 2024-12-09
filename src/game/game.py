@@ -41,7 +41,7 @@ class Board:
             self.graph.add_edge('Verbindung_zu_Reihe_8', f'{8},{col}')
 
         #Spieler erzeugen
-        self.player_a = Player(self,0,4,'A','minimax')
+        self.player_a = Player(self,0,4,'A','monte_carlo_game_search')
         self.player_b = Player(self,8,4,'B','monte_carlo_game_search')
         self.nodes_used_for_blocking = []
 
@@ -83,7 +83,13 @@ class Board:
     def simulate_game(self):
         current_player = self.player_a
         start_time = time.perf_counter()
+        rounds_a = 0
+        rounds_b = 0
+        time_a = 0
+        time_b = 0
         while not self.player_a.won and not self.player_b.won:
+
+            start_round_time = time.perf_counter()
             #self.print_board()
             #print(f"Spieler {current_player.name} ist am Zug.")
 
@@ -110,6 +116,14 @@ class Board:
                 action = minimax_game_search.search_next_move(6)  # Setze die Tiefe angemessen
 
             action_parts = action.split()
+
+            end_round_time = time.perf_counter()
+            if current_player == self.player_a:
+                rounds_a += 1
+                time_a += end_round_time - start_round_time
+            else:
+                time_b += end_round_time - start_round_time
+                rounds_b += 1
 
             move_ok = True
             if action_parts[0] == 'move' and len(action_parts) == 2:
@@ -148,12 +162,13 @@ class Board:
         #self.print_board()
 
         end_time = time.perf_counter()
+
         if self.player_a.won:
             #print("Spieler A hat gewonnen!")
-            print(f'minimax,monte_carlo,6,500,{(end_time - start_time):.3f},monte_carlo')
+            print(f'monte_carlo,monte_carlo,500,{(end_time - start_time):.3f},A,{rounds_a},{rounds_b},{(time_a/rounds_a):.3f},{(time_b/rounds_b):.3f}')
         else:
             #print("Spieler B hat gewonnen!")
-            print(f'minimax,monte_carlo,6,500,{(end_time - start_time):.3f},minimax')
+            print(f'monte_carlo,monte_carlo,500,{(end_time - start_time):.3f},B,{rounds_a},{rounds_b},{(time_a/rounds_a):.3f},{(time_b/rounds_b):.3f}')
     def get_possible_blocks(self, board):
         possible_blocks = []
         for row in range(self.size -1):
@@ -351,8 +366,8 @@ class Blocking_element:
 
 if __name__ == '__main__':
     #Ein paar beispielhafte Züge und wie das Spielfeld danach aussieht
-    print('player_a,player_b,minimax_depth,monte_iter,time,won')
-    for i in range(14):
+    print('player_a,player_b,monte_iter,time,won,rounds_a,rounds_b,time_per_round_a,time_per_round_b')
+    for i in range(20):
         board = Board(9)
         board.simulate_game()
 
