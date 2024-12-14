@@ -16,7 +16,8 @@ class MinimaxGameSearch:
             best_move = None
             for move in self.get_all_possible_moves(self.active_player):
                 next_node = MinimaxGameSearch(self.board, self.active_player)
-                next_node.perform_move(move)
+                if not next_node.perform_move(move):
+                    return self.evaluate_board(self.opponent if maximizing_player else self.active_player), best_move
                 eval = next_node.minimax(depth - 1, alpha, beta, False)[0]
                 #self.undo_move(move)
 
@@ -168,10 +169,10 @@ class MinimaxGameSearch:
 
         if action == "move":
             target = action_parts[1]
-            self.active_player.move(target)
+            return self.active_player.move(target)
         elif action == "block":
             row, col, orientation = int(action_parts[1]), int(action_parts[2]), action_parts[3]
-            self.active_player.place_blocking_element(row, col, orientation)
+            return self.active_player.place_blocking_element(row, col, orientation)
 
     def undo_move(self, move):
         action_parts = move.split()

@@ -39,6 +39,15 @@ minimax,minimax,2,1.613,A,47,46,0.015,0.019
 minimax,minimax,2,1.613,A,47,46,0.016,0.019
 minimax,minimax,2,1.610,A,47,46,0.016,0.019
 minimax,minimax,2,1.607,A,47,46,0.015,0.019
+minimax,minimax,3,4.266,A,43,42,0.046,0.054
+minimax,minimax,3,4.240,A,43,42,0.045,0.054
+minimax,minimax,3,4.280,A,43,42,0.046,0.055
+minimax,minimax,3,4.229,A,43,42,0.046,0.054
+minimax,minimax,3,4.256,A,43,42,0.046,0.054
+minimax,minimax,3,4.305,A,43,42,0.046,0.055
+minimax,minimax,3,4.254,A,43,42,0.046,0.054
+minimax,minimax,3,4.260,A,43,42,0.047,0.053
+minimax,minimax,3,4.248,A,43,42,0.046,0.054
 minimax,minimax,4,15.952,A,47,46,0.144,0.200
 minimax,minimax,4,16.116,A,47,46,0.145,0.201
 minimax,minimax,4,15.995,A,47,46,0.143,0.202
